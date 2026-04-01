@@ -79,19 +79,25 @@ def build_corpus():
 # ── 2. Parse queries ───────────────────────────────────────────────────────────
 def parse_queries():
     """
-    Query_doc.txt format:
-        <Q id="AILA_Q1">
-        ... query text ...
-        </Q>
+    Query_doc.txt format (pipe-delimited):
+        AILA_Q1||<full case text>
+        AILA_Q2||<full case text>
+        ...
+    Each query is a complete current case document.
+    The task: find which corpus cases/statutes are relevant to it.
     """
-    content = QUERY_FILE.read_text(encoding="utf-8", errors="replace")
     queries = {}
-    for match in re.finditer(r'<Q id="(AILA_Q\d+)">(.*?)</Q>', content, re.DOTALL):
-        qid  = match.group(1)
-        text = match.group(2).strip()
-        # Clean up whitespace
-        text = re.sub(r'\s+', ' ', text)
-        queries[qid] = text
+    with open(QUERY_FILE, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if "||" not in line:
+                continue
+            qid, text = line.split("||", 1)
+            qid  = qid.strip()
+            text = re.sub(r'\s+', ' ', text.strip())
+            queries[qid] = text
 
     out_path = OUT_DIR / "queries.json"
     with open(out_path, "w", encoding="utf-8") as f:
@@ -104,9 +110,9 @@ def parse_queries():
 # ── 3. Parse relevance judgments ───────────────────────────────────────────────
 def parse_relevance(filepath: Path) -> dict:
     """
-    TREC-style format: <line_num> <query_id> Q0 <doc_id> <score>
-    All listed docs are relevant (label = 1).
-    Returns: { query_id: [doc_id, ...] }
+    TREC-style format: <query_id> Q0 <doc_id> <relevance>
+    relevance = 1 → relevant, 0 → not relevant.
+    Returns: { query_id: [doc_id, ...] }  (only relevant docs)
     """
     relevance = {}
     with open(filepath, "r", encoding="utf-8") as f:
@@ -114,10 +120,12 @@ def parse_relevance(filepath: Path) -> dict:
             parts = line.strip().split()
             if len(parts) < 4:
                 continue
-            # Format: line_num  AILA_Q1  Q0  C168  0
-            qid    = parts[1]
-            doc_id = parts[3]
-            relevance.setdefault(qid, []).append(doc_id)
+            # Format: AILA_Q1  Q0  C168  0
+            qid    = parts[0]
+            doc_id = parts[2]
+            score  = parts[3]
+            if score == "1":
+                relevance.setdefault(qid, []).append(doc_id)
     return relevance
 
 
