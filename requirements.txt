@@ -1,0 +1,27 @@
+# Core NLP
+transformers==4.44.2
+torch==2.4.0
+sentence-transformers==3.0.1
+
+# Retrieval
+rank-bm25==0.2.2
+chromadb==0.5.5
+langchain==0.2.16
+langchain-community==0.2.16
+langchain-huggingface==0.0.3
+
+# Data processing
+pandas==2.2.2
+numpy==1.26.4
+tqdm==4.66.5
+
+# API & Frontend
+fastapi==0.112.2
+uvicorn==0.30.6
+streamlit==1.37.1
+
+# Evaluation
+scikit-learn==1.5.1
+
+# PDF reading (for overview paper)
+pypdf==4.3.1

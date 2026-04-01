@@ -1,0 +1,75 @@
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Data & archives (large/generated files)
+data/
+archive/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ML / model artifacts
+models/
+checkpoints/
+runs/
+outputs/
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+*.onnx
+*.pkl
+*.pickle
+wandb/
+mlruns/
+lightning_logs/
+
+# Environment variables / secrets
+.env
+.env.*
+*.env
+secrets.yaml
+secrets.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs & temp
+*.log
+*.tmp
+*.temp
+logs/
+tmp/
+
+# HuggingFace cache
+.cache/
