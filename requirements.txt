@@ -3,12 +3,18 @@ transformers==4.44.2
 torch==2.4.0
 sentence-transformers==3.0.1
 
+# Dense retrieval model (used instead of raw InLegalBERT)
+# all-mpnet-base-v2 is trained with contrastive loss for semantic similarity
+
 # Retrieval
 rank-bm25==0.2.2
 chromadb==0.5.5
 langchain==0.2.16
 langchain-community==0.2.16
 langchain-huggingface==0.0.3
+
+# NLP
+spacy>=3.7.0
 
 # Data processing
 pandas==2.2.2

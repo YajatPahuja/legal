@@ -6,9 +6,9 @@ Splits documents from unified_corpus.jsonl into retrieval-ready chunks.
 Novel strategy: Rhetorical role-aware chunking for case documents.
   - Detect role boundaries using regex patterns
   - Each chunk is tagged with its rhetorical role
-  - Role weights are applied during retrieval scoring
-
-For statutes (short): no chunking needed, entire doc = one chunk.
+  - Task-specific role weights applied during retrieval scoring:
+      case retrieval    → RATIO + ANALYSIS chunks boosted
+      statute retrieval → STATUTE_REF + ANALYSIS chunks boosted
 
 Run:
     python preprocessing/chunker.py
@@ -25,7 +25,6 @@ IN_FILE   = PROC_DIR / "unified_corpus.jsonl"
 OUT_FILE  = PROC_DIR / "chunked_corpus.jsonl"
 
 # ── Rhetorical role patterns ───────────────────────────────────────────────────
-# These are keyword-based heuristics to detect role section boundaries.
 ROLE_PATTERNS = [
     ("FACTS",       re.compile(
         r'\b(facts?|background|brief facts?|factual background|case background|'
@@ -51,7 +50,7 @@ ROLE_PATTERNS = [
         r'partly allow)|order accordingly|disposed? of|set aside)\b', re.IGNORECASE)),
 ]
 
-# Higher weight = more important for retrieval
+# ── Base role weights (used by BM25 retriever) ────────────────────────────────
 ROLE_WEIGHTS = {
     "RATIO":       1.5,
     "ANALYSIS":    1.3,
@@ -60,6 +59,30 @@ ROLE_WEIGHTS = {
     "ARGUMENTS":   1.0,
     "FACTS":       0.9,
     "GENERAL":     0.8,
+}
+
+# ── Task-specific weights (used by dense + hybrid retriever) ──────────────────
+# Informed by Kalamkar et al. (LREC 2022): ratio/analysis most useful for
+# case retrieval; statute references most useful for statute retrieval.
+TASK_WEIGHTS = {
+    "case": {
+        "RATIO":       1.6,
+        "ANALYSIS":    1.4,
+        "RULING":      1.2,
+        "STATUTE_REF": 1.0,
+        "ARGUMENTS":   1.0,
+        "FACTS":       0.8,
+        "GENERAL":     0.7,
+    },
+    "statute": {
+        "STATUTE_REF": 1.6,
+        "ANALYSIS":    1.3,
+        "RATIO":       1.2,
+        "RULING":      1.1,
+        "ARGUMENTS":   0.9,
+        "FACTS":       0.7,
+        "GENERAL":     0.7,
+    },
 }
 
 MAX_CHUNK_CHARS  = 1500   # ~300-400 tokens for BERT

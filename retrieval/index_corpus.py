@@ -3,9 +3,9 @@ index_corpus.py
 
 One-time script: embeds all chunks with InLegalBERT and stores in ChromaDB.
 
-Runtime estimate (MacBook Air M-series, CPU):
-  ~46k case chunks × 512 tokens, batch_size=32 → ~30–45 min
-  197 statute chunks → ~1 min
+Runtime estimate (MacBook Air M-series):
+  MPS (Apple GPU): batch_size=128 → ~6–10 min
+  CPU fallback:    batch_size=32  → ~30–45 min
 
 Run once from project root:
     python retrieval/index_corpus.py
@@ -25,7 +25,8 @@ from retrieval.embedder import LegalEmbedder
 from retrieval.vector_store import LegalVectorStore
 
 CHUNKS_FILE = BASE_DIR / "data" / "processed" / "chunked_corpus.jsonl"
-BATCH_SIZE  = 32   # lower to 16 if you get memory errors
+import torch
+BATCH_SIZE  = 256 if torch.backends.mps.is_available() else 32
 
 
 def load_chunks_by_type() -> tuple[list[dict], list[dict]]:
@@ -40,13 +41,22 @@ def load_chunks_by_type() -> tuple[list[dict], list[dict]]:
     return case_chunks, stat_chunks
 
 
+CHROMA_BATCH = 5000  # Large batches → fewer HNSW rebuilds → much faster writes
+
+
 def index_chunks(chunks: list[dict], doc_type: str, embedder: LegalEmbedder, store: LegalVectorStore):
-    print(f"\nIndexing {len(chunks)} {doc_type} chunks...")
+    # Phase 1: embed all chunks (GPU-efficient small batches)
+    print(f"\nEmbedding {len(chunks)} {doc_type} chunks...")
+    all_embeddings = []
     for i in tqdm(range(0, len(chunks), BATCH_SIZE)):
-        batch      = chunks[i : i + BATCH_SIZE]
-        texts      = [c["text"] for c in batch]
-        embeddings = embedder.encode(texts, batch_size=BATCH_SIZE)
-        store.add_chunks(batch, embeddings, doc_type=doc_type)
+        batch = chunks[i : i + BATCH_SIZE]
+        texts = [c["text"] for c in batch]
+        all_embeddings.extend(embedder.encode(texts, batch_size=BATCH_SIZE))
+
+    # Phase 2: write to ChromaDB in large batches (minimises HNSW rebuilds)
+    print(f"Writing to ChromaDB ({len(chunks)} chunks, batch={CHROMA_BATCH})...")
+    for i in tqdm(range(0, len(chunks), CHROMA_BATCH)):
+        store.add_chunks(chunks[i : i + CHROMA_BATCH], all_embeddings[i : i + CHROMA_BATCH], doc_type=doc_type)
 
 
 def main():
