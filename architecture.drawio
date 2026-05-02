@@ -1,0 +1,212 @@
+<mxfile host="app.diagrams.net" modified="2026-05-02T00:00:00.000Z" agent="Claude" version="21.6.8" type="device">
+  <diagram id="legal-ai-architecture" name="Indian Legal AI Architecture">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1860" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== SECTION BACKGROUNDS ==================== -->
+        <mxCell id="2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=40;arcSize=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1360" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="OFFLINE PIPELINE — Build Indexes (Run Once)" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#336699;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="20" y="26" width="1360" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=40;arcSize=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="850" width="1360" height="980" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="ONLINE PIPELINE — Per Query" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#336600;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="20" y="856" width="1360" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RAW DATA SOURCES ==================== -->
+        <mxCell id="6" value="&lt;b&gt;AILA Cases&lt;/b&gt;&lt;br&gt;archive/Object_casedocs/&lt;br&gt;&lt;i&gt;2,914 .txt files&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="300" y="80" width="165" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="&lt;b&gt;AILA Statutes&lt;/b&gt;&lt;br&gt;archive/Object_statutes/&lt;br&gt;&lt;i&gt;197 .txt files&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="480" y="80" width="165" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="&lt;b&gt;Query_doc.txt&lt;/b&gt;&lt;br&gt;50 AILA queries&lt;br&gt;&lt;i&gt;full case narratives&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="80" width="165" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="9" value="&lt;b&gt;Relevance qrels&lt;/b&gt;&lt;br&gt;195 case pairs&lt;br&gt;&lt;i&gt;221 statute pairs&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="840" y="80" width="165" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== PREPROCESSING ==================== -->
+        <mxCell id="10" value="&lt;b&gt;preprocessing/build_corpus.py&lt;/b&gt;&lt;br&gt;text cleaning · date/court parsing&lt;br&gt;→ unified_corpus.jsonl · queries.json · relevance.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="530" y="215" width="345" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="&lt;b&gt;unified_corpus.jsonl&lt;/b&gt; · &lt;b&gt;queries.json&lt;/b&gt; · &lt;b&gt;relevance.json&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="548" y="345" width="310" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="&lt;b&gt;preprocessing/chunker.py&lt;/b&gt;&lt;br&gt;13-role rhetorical taxonomy (FACTS · RATIO · RULING · STATUTE_REF · ANALYSIS …)&lt;br&gt;task-specific role weights per chunk → chunked_corpus.jsonl" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="508" y="455" width="390" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="&lt;b&gt;chunked_corpus.jsonl&lt;/b&gt;&lt;br&gt;46,415 case chunks · 197 statute chunks&lt;br&gt;&lt;i&gt;{ doc_id, doc_type, role, weight, text }&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="548" y="580" width="310" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== INDEXING ==================== -->
+        <mxCell id="14" value="&lt;b&gt;BM25 Token Cache&lt;/b&gt;&lt;br&gt;bm25_token_cache.pkl&lt;br&gt;regex tokenized · mtime-keyed cache" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="290" y="705" width="230" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="&lt;b&gt;retrieval/index_corpus.py&lt;/b&gt;&lt;br&gt;batch-embed (all-mpnet-base-v2)&lt;br&gt;fp16 · MPS · batch_size=256" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="558" y="705" width="230" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="&lt;b&gt;ChromaDB Vector Store&lt;/b&gt;&lt;br&gt;legal_cases · legal_statutes collections&lt;br&gt;cosine similarity · 768-d vectors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="828" y="705" width="250" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ONLINE: USER QUERY ==================== -->
+        <mxCell id="17" value="&lt;b&gt;User Query&lt;/b&gt;&lt;br&gt;facts of a matter (400–1,500 words)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="908" width="260" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RETRIEVERS ==================== -->
+        <mxCell id="18" value="&lt;b&gt;BM25 Retriever&lt;/b&gt; (retrieval/bm25_retriever.py)&lt;br&gt;① NER-clean query at runtime (spaCy en_core_web_sm)&lt;br&gt;② BM25Okapi.get_scores(tokens) over cached token lists&lt;br&gt;③ max-pool chunk scores → doc-level scores&lt;br&gt;→ top-200 candidate docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1038" width="318" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="&lt;b&gt;Dense Retriever&lt;/b&gt; (retrieval/dense_retriever.py)&lt;br&gt;① truncate query → first 300 words&lt;br&gt;② all-mpnet-base-v2 → 768-d query vector&lt;br&gt;③ ChromaDB cosine search (top-2000 chunks)&lt;br&gt;④ similarity × role_weight → max-pool → top-200" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1038" width="330" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== HYBRID ==================== -->
+        <mxCell id="20" value="&lt;b&gt;Hybrid Retriever — Reciprocal Rank Fusion&lt;/b&gt; (retrieval/hybrid_retriever.py)&lt;br&gt;rrf_score(doc) = Σ  w_i / (k + rank_i(doc))   ·   k = 60  (Cormack et al. 2009)&lt;br&gt;cases: w_bm25 = 1.0, w_dense = 1.0   ·   statutes: w_bm25 = 1.5, w_dense = 1.0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1210" width="700" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RERANKER ==================== -->
+        <mxCell id="21" value="&lt;b&gt;Reranker&lt;/b&gt; (retrieval/reranker.py)&lt;br&gt;cross-encoder/ms-marco-MiniLM-L-12-v2 · max_length=512 · batch_size=128 · MPS&lt;br&gt;score top-3 chunks per candidate (query, chunk_text) → max-pool → doc-level score&lt;br&gt;→ top-50 cases · top-30 statutes passed downstream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1348" width="700" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== OUTPUT BRANCHES ==================== -->
+        <mxCell id="22" value="&lt;b&gt;Evaluation&lt;/b&gt; (evaluation/)&lt;br&gt;MAP · NDCG@10 · MRR · P@5 · P@10&lt;br&gt;vs BM25 / Dense / Hybrid baselines" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="1500" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="&lt;b&gt;RAG Pipeline&lt;/b&gt; (rag/pipeline.py)&lt;br&gt;rerank_chunks() → top-N passages&lt;br&gt;build_prompt() with [C-N]/[S-N] citations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1500" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== GENERATORS ==================== -->
+        <mxCell id="57" value="RAG_BACKEND env var" style="text;html=1;align=center;fontStyle=2;fontSize=10;fontColor=#666666;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="630" y="1634" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="&lt;b&gt;Extractive&lt;/b&gt;&lt;br&gt;&lt;i&gt;(default)&lt;/i&gt;&lt;br&gt;verbatim snippets&lt;br&gt;no LLM · zero hallucination" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="630" y="1660" width="155" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="&lt;b&gt;DryRun&lt;/b&gt;&lt;br&gt;prompt only&lt;br&gt;no API call&lt;br&gt;&lt;i&gt;RAG_BACKEND=dryrun&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1660" width="155" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="26" value="&lt;b&gt;Anthropic&lt;/b&gt;&lt;br&gt;Claude via API&lt;br&gt;ANTHROPIC_API_KEY&lt;br&gt;&lt;i&gt;RAG_BACKEND=anthropic&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1660" width="155" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="27" value="&lt;b&gt;Ollama&lt;/b&gt;&lt;br&gt;local llama3.1&lt;br&gt;via Ollama daemon&lt;br&gt;&lt;i&gt;RAG_BACKEND=ollama&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="1660" width="155" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ANSWER ==================== -->
+        <mxCell id="28" value="&lt;b&gt;Answer + Citations&lt;/b&gt;&lt;br&gt;[C-1] … [S-N] · grounded in retrieved chunks" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="1790" width="300" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ARROWS: OFFLINE ==================== -->
+        <!-- Raw data → build_corpus -->
+        <mxCell id="30" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="6" target="10" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="7" target="10" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="8" target="10" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="9" target="10" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Preprocessing chain -->
+        <mxCell id="34" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="10" target="11" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="35" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="11" target="12" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="36" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="12" target="13" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- chunked_corpus → indexes -->
+        <mxCell id="37" value="regex tokenize" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="13" target="14" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="38" value="batch-embed" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="13" target="15" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="39" value="store vectors" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="15" target="16" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ARROWS: ONLINE ==================== -->
+        <!-- Query → Retrievers -->
+        <mxCell id="40" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="17" target="18" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="41" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="17" target="19" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Offline indexes used by online retrievers (dashed = pre-built dependency) -->
+        <mxCell id="42" value="cached tokens" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=10;fontColor=#888888;strokeColor=#aaaaaa;" edge="1" source="14" target="18" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="43" value="vector search" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;fontSize=10;fontColor=#888888;strokeColor=#aaaaaa;" edge="1" source="16" target="19" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Retrievers → Hybrid -->
+        <mxCell id="44" value="top-200" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="18" target="20" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="45" value="top-200" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="19" target="20" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Hybrid → Reranker -->
+        <mxCell id="46" value="top-50 cases · top-30 statutes" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="20" target="21" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Reranker → Outputs -->
+        <mxCell id="47" value="doc-level ranking" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="21" target="22" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="48" value="chunk-level top-N" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="21" target="23" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- RAGPipeline → Generators -->
+        <mxCell id="49" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="23" target="24" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="50" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="23" target="25" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="51" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="23" target="26" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="52" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="23" target="27" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Generators → Answer -->
+        <mxCell id="53" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="24" target="28" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="54" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="25" target="28" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="55" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="26" target="28" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="56" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="27" target="28" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
